@@ -1,45 +1,93 @@
 import discord
+from discord.ext import commands
 import random
 import asyncio
+import subprocess
+import os
 
+description = "My first bot; works as a testing ground"
 #the bot instance
-client = discord.Client()
+client = commands.Bot(command_prefix='$', description=description)
+
+
+
+token = open('token.txt')
+token = token.readlines()
+print(token)
 
 @client.event
 async def on_ready():
     print('Logged in as {0.user}'.format(client))
+    print(client.user.name)
+    print(client.user.id)
+    print('------------')
 
 @client.event
 async def on_message(message):
     #makes sure the bot doesn't respond to itself
     if message.author == client.user:
         return
+    await client.process_commands(message)
         
 
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello!')
-    if message.content.startswith('$ping'):
-        await message.channel.send('pong')
 
-    if message.content.startswith('$guess'):
-        await message.channel.send('Guess a number between 1 and 10.')
+
+@client.group()
+async def cool(ctx):
+    """Says if a user is cool.
+    In reality this just checks if a subcommand is being invoked.
+    """
+    if ctx.invoked_subcommand is None:
+        await ctx.send('No, {0.subcommand_passed} is not cool'.format(ctx))
+    else:
+        await ctx.send('Yes, {0.subcommand_passed} is cool'.format(ctx))
+
+
+@client.command()
+async def guess(ctx, number: int):
+    await ctx.send('Guess a number between 1 and 10.')
+
+    value = random.randint(1, 6)
+
+    await ctx.send(value == number)
+
+
+@client.command()
+async def hello(ctx, name: str):
+    await ctx.send("Hello, {}".format(name))
+
+@client.command()
+async def add(ctx, left: int, right: int):
+    "Adds two numbers together"
+    await ctx.send(left + right)
+
+@client.command()
+async def repeat(ctx, times: int, content='repeating...'):
+    """Repeats a message multiple times."""
+    for i in range(times):
+        await ctx.send(content)
+
+#TODO
+@client.command()
+async def lyrics(ctx, artist: str, song: str):
+    p = os.popen("./lyricsDown.sh {} {}".format(artist,song))
+    output = p.read()
+    if(len(output) > 2000):
+        await ctx.send("Sorry, that song is too long. All discord messages must have 2000 characters or less. This one has {}".format(str(len(output))))
+        
+    else:
+        await ctx.send(output)
+
+
     
-        def is_correct(m):
-            return m.author == message.author and m.content.isdigit()
 
-        answer = random.randint(1,10)
-        print(answer)
 
-        try:
-            #waits 10 seconds for a response 
-            guess = await client.wait_for('message', check=is_correct, timeout=10.0)
-        except asyncio.TimeoutError:
-            return await message.channel.send('Sorry, you took too long. It was {}.'.format(answer))
-        
-        if int(guess.content) == answer:
-            await message.channel.send("You're right! The number was {}".format(answer))
-        else:
-            await message.channel.send("Oops. It's actually {}".format(answer))
+
+
+
+
+
+
 
 #DO NOT CHANGE
-client.run("Njk2Nzg4Mjk4MzMyNTA0MTE1.Xot5Cg.3mO0yfxjb5cBJAmVyGLvHT1cpDM")
+client.run(token[0])
