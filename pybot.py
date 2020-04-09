@@ -20,7 +20,6 @@ print(token)
 async def on_ready():
     print('Logged in as {0.user}'.format(client))
     print(client.user.name)
-    print(client.user.id)
     print('------------')
 
 @client.event
