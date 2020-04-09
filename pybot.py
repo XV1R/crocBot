@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import Spotify
 import random
 import asyncio
 import subprocess
@@ -30,6 +31,8 @@ async def on_message(message):
     await client.process_commands(message)
         
 
+#TODO
+#spotify = discord.Spotify()
 
 
 @client.group()
@@ -68,8 +71,26 @@ async def repeat(ctx, times: int, content='repeating...'):
         await ctx.send(content)
 
 #TODO
+# @client.command()
+# async def lyrics(ctx, artist: str, song: str):
+#     p = os.popen("./lyricsDown.sh {} {}".format(artist,song))
+#     output = p.read()
+#     if(len(output) > 2000):
+#         await ctx.send("Sorry, that song is too long. All discord messages must have 2000 characters or less. This one has {}".format(str(len(output))))
+        
+#     else:
+#         await ctx.send(output)
+
 @client.command()
-async def lyrics(ctx, artist: str, song: str):
+async def test(ctx, *args):
+    artist = args[0].replace(" ","")
+    song = args[1].replace(" ","")
+    await ctx.send("{} {}".format(artist,song))
+    
+@client.command()
+async def lyrics(ctx, *args):
+    artist = args[0].replace(" ","")
+    song = args[1].replace(" ","")
     p = os.popen("./lyricsDown.sh {} {}".format(artist,song))
     output = p.read()
     if(len(output) > 2000):
@@ -79,7 +100,17 @@ async def lyrics(ctx, artist: str, song: str):
         await ctx.send(output)
 
 
-    
+
+@client.command()
+async def spotify(ctx, user: discord.Member=None):
+    #user = user or ctx.author
+    user = ctx.author
+    for activity in user.activities:
+        if isinstance(activity, discord.Spotify):
+            await ctx.send(f"{user} is listening to {activity.title} by {activity.artist}")
+            await ctx.send(activity.album_cover_url)
+            await lyrics(ctx, str(activity.artist),str(activity.title))
+
 
 
 
